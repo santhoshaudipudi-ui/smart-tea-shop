@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ganesh Healthy Tea</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 100px; color: #333; }
+       
+        .hero-container { background: white; padding: 10px; border-bottom: 1px solid #ddd; text-align: center;}
+        .hero-img { width: 100%; height: auto; border-radius: 8px; display: block; }
+
+        /* Best Sellers Slider */
+        .section-title { font-size: 18px; font-weight: bold; margin: 15px 15px 5px; color: #2e7d32; }
+        .slider-container { display: flex; overflow-x: auto; gap: 15px; padding: 10px 15px; scroll-behavior: smooth; scrollbar-width: none; }
+        .slider-container::-webkit-scrollbar { display: none; }
+        .best-card { min-width: 130px; background: white; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
+        .best-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 8px; border: 2px solid #2e7d32; }
+        .best-tag { position: absolute; top: 5px; left: 5px; background: #ff9800; color: white; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
+
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .shop-title { color: #2e7d32; font-size: 26px; font-weight: bold; margin: 10px 0; }
+       
+        /* Side-by-Side Name & Phone */
+        .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .input-row input { flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; box-sizing: border-box; outline: none; }
+        .input-row input:focus { border-color: #2e7d32; }
+
+        /* Menu Card */
+        .menu-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .tea-info { display: flex; align-items: center; gap: 15px; }
+        .tea-img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; }
+       
+        /* Qty Controls */
+        .qty-box { display: flex; align-items: center; gap: 10px; background: #f0f2f5; padding: 6px 12px; border-radius: 20px; transition: 0.3s; }
+        .qty-box.active { background: #e8f5e9; border: 1px solid #2e7d32; }
+        .qty-btn { border: none; background: none; font-weight: bold; cursor: pointer; color: #2e7d32; font-size: 20px; }
+
+        /* Sliding Cart */
+        #cart-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
+        #cart-panel { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; transition: 0.4s; z-index: 2000; border-radius: 24px 24px 0 0; }
+        #cart-panel.open { bottom: 0; }
+        .cart-handle { width: 40px; height: 5px; background: #ccc; border-radius: 10px; margin: 12px auto; }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px dashed #eee; }
+
+        /* Bottom Bar */
+        #cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #2e7d32; color: white; padding: 20px; font-weight: bold; border: none; font-size: 18px; z-index: 1000; display: flex; justify-content: space-between; }
+       
+        /* Status & Feedback */
+        #status-bar { position: fixed; top: 0; width: 100%; background: #ff9800; color: white; padding: 12px; display: none; z-index: 3000; text-align: center; font-weight: bold; }
+        #feedback-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; justify-content: center; align-items: center; }
+        .feedback-card { background: white; padding: 30px; border-radius: 20px; width: 80%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .star { font-size: 35px; cursor: pointer; color: #ccc; transition: 0.2s; }
+        .star.selected { color: #fbbc04; }
+    </style>
+</head>
+<body>
+
+    <audio id="dingSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    <div id="status-bar">Order Status: <span id="live-status">Preparing...</span></div>
+
+    <div id="feedback-overlay">
+        <div class="feedback-card">
+            <h2 style="color:#2e7d32; margin-top:0;">Tea is Ready! 🍵</h2>
+            <p>Please rate your experience</p>
+            <div id="star-rating">
+                <span class="star" onclick="setRate(1)">★</span><span class="star" onclick="setRate(2)">★</span><span class="star" onclick="setRate(3)">★</span><span class="star" onclick="setRate(4)">★</span><span class="star" onclick="setRate(5)">★</span>
+            </div><br>
+            <button onclick="sendFeedback()" style="background:#2e7d32; color:white; border:none; padding:15px 35px; border-radius:30px; font-weight:bold; cursor:pointer; width:100%;">SUBMIT</button>
+        </div>
+    </div>
+
+    <div id="cart-overlay" onclick="toggleCart()"></div>
+    <div id="cart-panel">
+        <div class="cart-handle"></div>
+        <div style="padding: 0 20px 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+            <b>Review Selection</b><span onclick="toggleCart()" style="cursor:pointer;">✕</span>
+        </div>
+        <div id="cart-items-list" style="max-height: 250px; overflow-y: auto;"></div>
+        <div style="padding: 20px; font-size: 20px; font-weight: bold; color: #2e7d32; display: flex; justify-content: space-between;">
+            <span>Total</span><span id="cart-total-price">₹0</span>
+        </div>
+        <button onclick="placeOrder()" style="width: 100%; padding: 18px; background: #2e7d32; color: white; border: none; font-weight: bold; cursor: pointer;">PLACE ORDER</button>
+    </div>
+
+    <div class="hero-container"><img src="/static/shop.jpg" class="hero-img" onerror="this.src='https://via.placeholder.com/800x400?text=Ganesh+Tea+Shop'"></div>
+
+    <div class="section-title">🔥 Best Sellers</div>
+    <div class="slider-container" id="best-slider">
+        <div class="best-card">
+            <span class="best-tag">Top 1</span>
+            <img src="/static/gingertea.jpg" class="best-img" onerror="this.src='https://via.placeholder.com/80?text=Tea'">
+            <div style="font-weight:bold; font-size:13px;">Ginger Tea</div>
+            <button onclick="updateQty('Ginger Tea', 1)" style="margin-top:5px; border:none; background:#2e7d32; color:white; border-radius:10px; padding:4px 10px; font-size:11px;">ADD</button>
+        </div>
+        <div class="best-card">
+            <span class="best-tag">Top 2</span>
+            <img src="/static/lemontea.jpg" class="best-img" onerror="this.src='https://via.placeholder.com/80?text=Tea'">
+            <div style="font-weight:bold; font-size:13px;">Lemon Tea</div>
+            <button onclick="updateQty('Lemon Tea', 1)" style="margin-top:5px; border:none; background:#2e7d32; color:white; border-radius:10px; padding:4px 10px; font-size:11px;">ADD</button>
+        </div>
+        <div class="best-card">
+            <span class="best-tag">Popular</span>
+            <img src="/static/minttea.jpg" class="best-img" onerror="this.src='https://via.placeholder.com/80?text=Tea'">
+            <div style="font-weight:bold; font-size:13px;">Mint Tea</div>
+            <button onclick="updateQty('Mint Tea', 1)" style="margin-top:5px; border:none; background:#2e7d32; color:white; border-radius:10px; padding:4px 10px; font-size:11px;">ADD</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="shop-title">Ganesh Healthy Tea</div>
+       
+        <div class="input-row">
+            <input type="text" id="cust-name" placeholder="Name">
+            <input type="text" id="cust-phone" placeholder="Phone No." maxlength="10">
+        </div>
+
+        <div id="menu-container">
+            <script>
+                const menu = [
+                    {n:'Mint Tea', f:'minttea.jpg'}, {n:'Amla Tea', f:'amlatea.jpg'}, {n:'Aloe Vera Tea', f:'aloeveratea.jpg'},
+                    {n:'Ginger Tea', f:'gingertea.jpg'}, {n:'Lemon Tea', f:'lemontea.jpg'}, {n:'Green Tea', f:'greentea.jpg'},
+                    {n:'Spinach Soup', f:'spinachsoup.jpg'}, {n:'Jamun Tea', f:'jamuntea.jpg'}, {n:'Tulsi Tea', f:'tulsitea.jpg'}, {n:'Chicory Root', f:'chicoryroot.jpg'}
+                ];
+                menu.forEach(item => {
+                    let id = item.n.replace(/\s+/g, '');
+                    document.write(`
+                        <div class="menu-card">
+                            <div class="tea-info">
+                                <img src="/static/${item.f}" class="tea-img" onerror="this.src='https://via.placeholder.com/100?text=Tea'">
+                                <div><b>${item.n}</b><br><span style="color:#2e7d32">₹30</span></div>
+                            </div>
+                            <div class="qty-box" id="box-${id}">
+                                <button class="qty-btn" onclick="updateQty('${item.n}', -1)">−</button>
+                                <span id="qty-${id}" style="font-weight:bold; width:20px; text-align:center;">0</span>
+                                <button class="qty-btn" onclick="updateQty('${item.n}', 1)">+</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            </script>
+        </div>
+    </div>
+
+    <button id="cart-bar" onclick="toggleCart()">
+        <span>🛒 VIEW CART (<span id="count">0</span>)</span>
+        <span id="bar-total">₹0</span>
+    </button>
+
+    <script>
+        let cart = []; let myOrderId = null; let soundPlayed = false; let currentRating = 0;
+
+        function updateQty(name, delta) {
+            if (delta === 1) cart.push(name);
+            else { const idx = cart.indexOf(name); if (idx > -1) cart.splice(idx, 1); }
+            syncUI();
+        }
+
+        function syncUI() {
+            const counts = {}; cart.forEach(x => counts[x] = (counts[x] || 0) + 1);
+            document.querySelectorAll('[id^="qty-"]').forEach(el => el.innerText = "0");
+            document.querySelectorAll('.qty-box').forEach(el => el.classList.remove('active'));
+            for (const [tea, count] of Object.entries(counts)) {
+                const id = tea.replace(/\s+/g, '');
+                if(document.getElementById('qty-' + id)) {
+                    document.getElementById('qty-' + id).innerText = count;
+                    document.getElementById('box-' + id).classList.add('active');
+                }
+            }
+            document.getElementById('count').innerText = cart.length;
+            document.getElementById('bar-total').innerText = "₹" + (cart.length * 30);
+            document.getElementById('cart-total-price').innerText = "₹" + (cart.length * 30);
+            let h = '';
+            for (const [tea, count] of Object.entries(counts)) {
+                h += `<div class="cart-item-row"><span>${tea} (x${count})</span>
+                        <div class="qty-box active">
+                            <button class="qty-btn" onclick="updateQty('${tea}', -1)">−</button>
+                            <span style="font-weight:bold; width:20px; text-align:center;">${count}</span>
+                            <button class="qty-btn" onclick="updateQty('${tea}', 1)">+</button>
+                        </div></div>`;
+            }
+            document.getElementById('cart-items-list').innerHTML = h || '<p style="text-align:center; padding:20px;">Cart is empty</p>';
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-panel').classList.toggle('open');
+            document.getElementById('cart-overlay').style.display = document.getElementById('cart-panel').classList.contains('open') ? 'block' : 'none';
+        }
+
+        function placeOrder() {
+            let name = document.getElementById('cust-name').value;
+            let phone = document.getElementById('cust-phone').value;
+            if(!name || !phone || cart.length === 0) return alert("Enter Name, Phone and items!");
+           
+            fetch('/place_order', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: `${name} (${phone})`, tea: cart.join(', '), total: cart.length * 30})
+            }).then(r => r.json()).then(res => {
+                myOrderId = res.id; toggleCart();
+                document.getElementById('status-bar').style.display = 'block';
+                document.getElementById('cart-bar').innerHTML = "<span>ORDER PLACED ✅</span>";
+                document.getElementById('cart-bar').disabled = true;
+                startTracking();
+            });
+        }
+
+        function startTracking() {
+            setInterval(() => {
+                if(!myOrderId) return;
+                fetch('/admin/data').then(r => r.json()).then(data => {
+                    let me = data.history.find(o => o.id === myOrderId);
+                    if(me) {
+                        document.getElementById('live-status').innerText = me.status;
+                        // Trigger logic for Ding and Feedback
+                        if(me.status.includes("READY") && !soundPlayed) {
+                            document.getElementById('dingSound').play();
+                            soundPlayed = true;
+                            document.getElementById('feedback-overlay').style.display = 'flex';
+                        }
+                    }
+                });
+            }, 3000);
+        }
+
+        function setRate(r) { currentRating = r; document.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('selected', i < r)); }
+        function sendFeedback() {
+            fetch('/submit_feedback', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myOrderId, rating: currentRating}) })
+            .then(() => { alert("Thanks for your feedback!"); location.reload(); });
+        }
+
+        const slider = document.getElementById('best-slider');
+        let scrollAmount = 0;
+        setInterval(() => {
+            if(scrollAmount >= slider.scrollWidth - slider.clientWidth) scrollAmount = 0;
+            else scrollAmount += 140;
+            slider.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+        }, 3000);
+    </script>
+</body>
+</html>

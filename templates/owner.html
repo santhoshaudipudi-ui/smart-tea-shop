@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Owner Dashboard - Ganesh Healthy Tea</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f0; padding: 20px; text-align: center; }
+       
+        /* Stats Cards */
+        .stats-row { display: flex; justify-content: space-around; margin-bottom: 25px; }
+        .stat-card { background: #2e7d32; color: white; padding: 20px; border-radius: 15px; width: 42%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+       
+        /* Order Cards */
+        .order-card {
+            background: white; margin: 15px auto; padding: 20px; border-radius: 12px;
+            max-width: 500px; text-align: left; border-left: 8px solid #2e7d32;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-ready { background: #2e7d32; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-delay { background: #d97706; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+       
+        /* History Table */
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 40px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #eee; padding: 15px; text-align: left; }
+        th { background: #2e7d32; color: white; }
+       
+        /* Flash Background Alert */
+        @keyframes flash { 0%, 100% { background: #f0f4f0; } 50% { background: #ffdfdf; } }
+        .alert-bg { animation: flash 1s infinite; }
+    </style>
+</head>
+<body>
+
+    <h1 style="color: #2e7d32; margin-bottom: 30px;">Ganesh Tea: Owner Control Panel</h1>
+
+    <div class="stats-row">
+        <div class="stat-card">Today's Revenue<h2 id="daily" style="margin:10px 0 0 0;">₹0</h2></div>
+        <div class="stat-card">Monthly Revenue<h2 id="monthly" style="margin:10px 0 0 0;">₹0</h2></div>
+    </div>
+<div style="text-align: center; margin: 20px auto; padding: 25px; background: white; border-radius: 20px; border: 3px solid #2e7d32; display: block; max-width: 350px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+   
+    <div style="background: #e8f5e9; color: #2e7d32; padding: 6px 15px; border-radius: 50px; font-size: 12px; font-weight: bold; margin-bottom: 15px; display: inline-block; letter-spacing: 1px;">
+        ● LIVE SERVER CONNECTED
+    </div>
+
+    <h2 style="color: #2e7d32; margin: 0 0 5px 0; font-size: 20px;">Ganesh Healthy Tea</h2>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Scan to open Customer Menu</p>
+   
+    <div style="background: #f9f9f9; padding: 15px; border-radius: 12px; display: inline-block;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=  https://avianna-footed-uninferentially.ngrok-free.dev"
+             alt="Live QR Code"
+             style="width: 200px; height: 200px; display: block;">
+    </div>
+   
+    <p style="font-size: 11px; color: #999; margin-top: 15px; font-family: monospace;">
+        avianna-footed-uninferentially.ngrok-free.dev
+    </p>
+</div>
+    <div id="live-orders-container">
+        <h3 style="text-align: left; max-width: 500px; margin: 20px auto; color: #444;">Live Orders</h3>
+        <div id="live-list"></div>
+    </div>
+
+    <h2 style="margin-top:60px; color: #444;">📜 Sales History & Customer Ratings</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Tea Items ordered</th>
+                <th>Total Price</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody id="hist-body"></tbody>
+    </table>
+
+    <script>
+        let lastOrderCount = 0;
+
+        function updateOwnerDashboard() {
+            fetch('/admin/data').then(r => r.json()).then(data => {
+                document.getElementById('daily').innerText = "₹" + data.daily;
+                document.getElementById('monthly').innerText = "₹" + data.monthly;
+               
+                let liveHtml = '';
+                let historyHtml = '';
+                let activeCount = 0;
+
+                data.history.forEach(order => {
+                    // UPDATED LOGIC: Count items by commas.
+                    // Since "Tea, Tea, Tea" has 2 commas, we add 1 to get the cup count.
+                    let itemCount = order.tea ? order.tea.split(',').length : 0;
+                   
+                    // LARGE ORDER logic changed to 5 cups
+                    let largeBadge = itemCount >= 5
+                        ? '<span style="color:#d32f2f; background:#ffebee; padding:2px 6px; border-radius:4px; font-size:11px; border:1px solid #d32f2f; margin-left:10px; vertical-align:middle;">🚨 LARGE ORDER (5+ Cups)</span>'
+                        : '';
+
+                    if(!order.status.includes('READY')) {
+                        activeCount++;
+                        liveHtml += `
+                            <div class="order-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <b style="font-size:17px;">${order.name} ${largeBadge}</b>
+                                    <span style="font-size:12px; color:#666;">#${order.id}</span>
+                                </div>
+                                <div style="color: #d97706; font-size: 13px; margin-top:4px; font-weight:bold;">${order.status}</div>
+                                <p style="background: #f9f9f9; padding: 12px; border-radius: 8px; margin: 12px 0; border: 1px solid #eee;">${order.tea}</p>
+                                <div class="btn-group">
+                                    <button class="btn-ready" onclick="changeStatus(${order.id},'ready')">READY ✅</button>
+                                    <button class="btn-delay" onclick="changeStatus(${order.id},'delay')">DELAY ⏳</button>
+                                </div>
+                            </div>`;
+                    }
+
+                    historyHtml += `
+                        <tr>
+                            <td><b>${order.name}</b></td>
+                            <td>${order.tea}</td>
+                            <td>₹${order.price}</td>
+                            <td style="color:#fbbc04; font-size:18px;">${'★'.repeat(order.rating) || '<span style="color:#ccc; font-size:12px;">No rating</span>'}</td>
+                        </tr>`;
+                });
+
+                if(activeCount > lastOrderCount) document.body.classList.add('alert-bg');
+                else if (activeCount === 0) document.body.classList.remove('alert-bg');
+               
+                lastOrderCount = activeCount;
+                document.getElementById('live-list').innerHTML = liveHtml || '<p style="color:#999; margin-top:20px;">Waiting for orders...</p>';
+                document.getElementById('hist-body').innerHTML = historyHtml;
+            });
+        }
+
+        function changeStatus(orderId, action) {
+            fetch(`/update_status/${orderId}/${action}`, {method:'POST'}).then(() => {
+                document.body.classList.remove('alert-bg');
+                updateOwnerDashboard();
+            });
+        }
+
+        setInterval(updateOwnerDashboard, 3000);
+        updateOwnerDashboard();
+    </script>
+</body>
+</html>
