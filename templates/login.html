@@ -6,8 +6,8 @@
 
     <style>
         body {
-            font-family: Arial;
-            background: #f0f2f5;
+            font-family: "Times New Roman",Times,serif;
+            background: #F5F7FA;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,11 +16,11 @@
         }
 
         .login-box {
-            background: white;
+            background: #FFFFFF;
             padding: 40px;
             border-radius: 20px;
             width: 320px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
             text-align: center;
         }
 
@@ -38,7 +38,7 @@
             padding: 14px;
             margin-top: 20px;
             border: none;
-            background: #2e7d32;
+            background: #2563EB;
             color: white;
             border-radius: 10px;
             font-weight: bold;
@@ -57,11 +57,12 @@
     <h2>Owner Login</h2>
 
     <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
+        <input type="text" name="username" placeholder="Enter Username" required>
 
-        <input type="password" name="password" placeholder="Password" required>
+        <input type="password" name="password" placeholder="Enter Password" required>
 
         <button type="submit">LOGIN</button>
+	<button type="reset">Reset</button>
     </form>
 
     <div class="error">{{ error }}</div>
